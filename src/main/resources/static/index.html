@@ -1,1133 +1,849 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>LogPulse</title>
 
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
-
-	<link
-		href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500&display=swap"
-		rel="stylesheet" />
-
+	<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 	<style>
 		:root {
-			--bg-base: #080c12;
-			--bg-panel: #0d1117;
-			--bg-card: #111827;
-			--bg-input: #0a0f18;
-			--border: #1e2d40;
-			--border-glow: #00ffe0;
-			--accent: #00ffe0;
-			--accent2: #0066ff;
-			--accent3: #7c3aed;
-			--text-primary: #e2e8f0;
-			--text-muted: #4a5568;
-			--text-dim: #718096;
-			--critical: #ff2d55;
-			--high: #ff8c00;
-			--medium: #ffd60a;
-			--low: #30d158;
+			--bg-base: #0f172a;
+			--bg-subtle: #1e293b;
+			--primary: #3b82f6;
+			--primary-glow: rgba(59, 130, 246, 0.5);
+			--accent: #8b5cf6;
+			--secondary: #10b981;
+			--critical: #ef4444;
+			--high: #f97316;
+			--medium: #eab308;
+			--low: #10b981;
+			--text-primary: #f8fafc;
+			--text-secondary: #94a3b8;
+			--glass-bg: rgba(30, 41, 59, 0.7);
+			--glass-border: rgba(255, 255, 255, 0.1);
 			--font-mono: 'Share Tech Mono', monospace;
-			--font-display: 'Rajdhani', sans-serif;
+			--font-display: 'Outfit', sans-serif;
 			--font-body: 'Inter', sans-serif;
 		}
 
-		*,
-		*::before,
-		*::after {
+		* {
 			box-sizing: border-box;
 			margin: 0;
 			padding: 0;
 		}
 
 		body {
-			background-color: var(--bg-base);
+			background: radial-gradient(circle at top left, #1e1b4b, var(--bg-base) 40%, #020617);
 			color: var(--text-primary);
 			font-family: var(--font-body);
 			min-height: 100vh;
 			overflow-x: hidden;
 		}
 
-		/* ── GRID BACKGROUND ── */
-		body::before {
-			content: '';
-			position: fixed;
-			inset: 0;
-			background-image:
-				linear-gradient(rgba(0, 255, 224, 0.03) 1px, transparent 1px),
-				linear-gradient(90deg, rgba(0, 255, 224, 0.03) 1px, transparent 1px);
-			background-size: 40px 40px;
-			pointer-events: none;
-			z-index: 0;
+		@keyframes floating {
+			0% { transform: translateY(0px); }
+			50% { transform: translateY(-10px); }
+			100% { transform: translateY(0px); }
 		}
 
-		.app-wrapper {
-			position: relative;
-			z-index: 1;
+		@keyframes slideIn {
+			from { opacity: 0; transform: translateY(20px); }
+			to { opacity: 1; transform: translateY(0); }
 		}
 
-		/* ── TOPBAR ── */
+		.glass-panel {
+			background: var(--glass-bg);
+			backdrop-filter: blur(16px);
+			-webkit-backdrop-filter: blur(16px);
+			border: 1px solid var(--glass-border);
+			border-radius: 16px;
+			box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+			padding: 1.5rem;
+			transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+		}
+
+		.glass-panel:hover {
+			border-color: rgba(255, 255, 255, 0.2);
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+		}
+
 		.topbar {
-			background: linear-gradient(90deg, #080c12 0%, #0a1020 50%, #080c12 100%);
-			border-bottom: 1px solid var(--border);
-			padding: 0 2rem;
-			height: 64px;
+			background: rgba(15, 23, 42, 0.8);
+			backdrop-filter: blur(12px);
+			border-bottom: 1px solid var(--glass-border);
+			height: 70px;
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
+			padding: 0 2.5rem;
 			position: sticky;
 			top: 0;
-			z-index: 100;
-			backdrop-filter: blur(10px);
+			z-index: 1000;
 		}
 
-		.topbar-brand {
+		.brand {
 			display: flex;
 			align-items: center;
-			gap: 12px;
+			gap: 15px;
+			animation: slideIn 0.6s ease-out;
 		}
 
-		.brand-icon {
-			width: 36px;
-			height: 36px;
-			background: linear-gradient(135deg, var(--accent), var(--accent2));
-			border-radius: 8px;
+		.brand-circle {
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			background: linear-gradient(135deg, var(--primary), var(--accent));
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			font-size: 18px;
-			box-shadow: 0 0 16px rgba(0, 255, 224, 0.4);
-		}
-
-		.brand-name {
+			box-shadow: 0 0 15px var(--primary-glow);
+			font-weight: bold;
+			font-size: 1.2rem;
+			color: white;
 			font-family: var(--font-display);
-			font-size: 1.4rem;
+		}
+
+		.brand-text {
+			font-family: var(--font-display);
 			font-weight: 700;
-			letter-spacing: 2px;
-			color: var(--accent);
-			text-transform: uppercase;
+			font-size: 1.6rem;
+			background: linear-gradient(90deg, #fff, #94a3b8);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			letter-spacing: 1px;
 		}
 
-		.brand-sub {
-			font-family: var(--font-mono);
-			font-size: 0.65rem;
-			color: var(--text-muted);
-			letter-spacing: 3px;
-			text-transform: uppercase;
-			margin-top: -4px;
-		}
-
-		.topbar-status {
+		.status-indicator {
 			display: flex;
 			align-items: center;
 			gap: 8px;
 			font-family: var(--font-mono);
-			font-size: 0.72rem;
-			color: var(--text-muted);
+			font-size: 0.8rem;
+			color: var(--text-secondary);
 		}
 
-		.status-dot {
-			width: 8px;
-			height: 8px;
+		.pulse-dot {
+			width: 10px;
+			height: 10px;
 			border-radius: 50%;
-			background: var(--low);
-			box-shadow: 0 0 6px var(--low);
-			animation: pulse 2s infinite;
+			background-color: var(--secondary);
+			box-shadow: 0 0 10px var(--secondary);
+			animation: pulse-anim 2s infinite;
 		}
 
-		@keyframes pulse {
-			0%, 100% { opacity: 1; }
-			50% { opacity: 0.4; }
+		@keyframes pulse-anim {
+			0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+			70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+			100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 		}
 
-		/* ── MAIN LAYOUT ── */
 		.main-content {
-			max-width: 1400px;
-			margin: 0 auto;
-			padding: 2rem 1.5rem;
+			max-width: 1200px;
+			margin: 3rem auto;
+			padding: 0 1.5rem;
 		}
 
-		/* ── SECTION TITLES ── */
-		.section-label {
-			font-family: var(--font-mono);
-			font-size: 0.7rem;
-			color: var(--accent);
-			letter-spacing: 4px;
-			text-transform: uppercase;
-			margin-bottom: 0.5rem;
-		}
-
-		.section-title {
+		.header-title {
 			font-family: var(--font-display);
-			font-size: 1.6rem;
+			font-size: 2.2rem;
 			font-weight: 700;
-			color: var(--text-primary);
-			letter-spacing: 1px;
+			margin-bottom: 0.5rem;
+			animation: slideIn 0.8s ease-out;
 		}
 
-		/* ── PANEL CARD ── */
-		.panel {
-			background: var(--bg-card);
-			border: 1px solid var(--border);
-			border-radius: 12px;
-			padding: 1.5rem;
-			position: relative;
-			overflow: hidden;
-		}
-
-		.panel::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			height: 2px;
-			background: linear-gradient(90deg, transparent, var(--accent), transparent);
-			opacity: 0.4;
-		}
-
-		.panel-glow {
-			box-shadow: 0 0 30px rgba(0, 255, 224, 0.05);
-		}
-
-		/* ── INPUT SECTION ── */
-		.analyze-form {
-			background: var(--bg-card);
-			border: 1px solid var(--border);
-			border-radius: 16px;
-			padding: 2rem;
+		.header-subtitle {
+			font-family: var(--font-mono);
+			color: var(--accent);
+			font-size: 0.9rem;
 			margin-bottom: 2rem;
-			position: relative;
-			overflow: hidden;
+			text-transform: uppercase;
+			letter-spacing: 2px;
+			animation: slideIn 1s ease-out;
 		}
 
-		.analyze-form::after {
-			content: '';
-			position: absolute;
-			top: -40px;
-			right: -40px;
-			width: 200px;
-			height: 200px;
-			background: radial-gradient(circle, rgba(0, 255, 224, 0.06) 0%, transparent 70%);
-			pointer-events: none;
-		}
-
-		/* ── FILE UPLOAD DROP ZONE ── */
-		.drop-zone {
-			background: var(--bg-input);
-			border: 2px dashed var(--border);
-			border-radius: 10px;
-			padding: 2.5rem 1.5rem;
+		.drop-area {
+			background: rgba(15, 23, 42, 0.4);
+			border: 2px dashed var(--primary);
+			border-radius: 16px;
+			padding: 3rem 2rem;
 			text-align: center;
 			cursor: pointer;
-			transition: all 0.25s ease;
+			transition: all 0.3s ease;
 			position: relative;
 			overflow: hidden;
 		}
 
-		.drop-zone:hover,
-		.drop-zone.dragover {
+		.drop-area:hover, .drop-area.active {
+			background: rgba(59, 130, 246, 0.1);
 			border-color: var(--accent);
-			background: rgba(0, 255, 224, 0.04);
-			box-shadow: 0 0 20px rgba(0, 255, 224, 0.08);
+			box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+			transform: scale(1.01);
 		}
 
-		.drop-zone.has-file {
-			border-color: var(--low);
-			border-style: solid;
-			background: rgba(48, 209, 88, 0.04);
-		}
-
-		.drop-zone.has-file:hover {
-			border-color: var(--accent);
-			background: rgba(0, 255, 224, 0.04);
-			box-shadow: 0 0 20px rgba(0, 255, 224, 0.08);
-		}
-
-		#fileInput {
+		.drop-area input[type="file"] {
 			position: absolute;
-			inset: 0;
-			opacity: 0;
-			cursor: pointer;
 			width: 100%;
 			height: 100%;
+			top: 0;
+			left: 0;
+			opacity: 0;
+			cursor: pointer;
+			z-index: 10;
 		}
 
 		.drop-icon {
-			font-size: 2.2rem;
-			color: var(--text-muted);
-			margin-bottom: 0.75rem;
-			display: block;
-			transition: color 0.2s;
-		}
-
-		.drop-zone:hover .drop-icon,
-		.drop-zone.dragover .drop-icon {
-			color: var(--accent);
-		}
-
-		.drop-zone.has-file .drop-icon {
-			color: var(--low);
-		}
-
-		.drop-title {
-			font-family: var(--font-display);
-			font-size: 1rem;
-			font-weight: 600;
-			color: var(--text-primary);
-			letter-spacing: 1px;
-			margin-bottom: 0.25rem;
-		}
-
-		.drop-sub {
-			font-family: var(--font-mono);
-			font-size: 0.72rem;
-			color: var(--text-muted);
-			letter-spacing: 2px;
-		}
-
-		.file-info {
-			display: none;
+			width: 64px;
+			height: 64px;
+			background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+			border-radius: 50%;
+			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 10px;
-			margin-top: 0.75rem;
-			padding: 0.5rem 1rem;
-			background: rgba(48, 209, 88, 0.08);
-			border: 1px solid rgba(48, 209, 88, 0.2);
-			border-radius: 6px;
+			margin: 0 auto 1.5rem;
+			color: var(--primary);
+			font-size: 24px;
+			border: 1px solid rgba(59, 130, 246, 0.3);
+			animation: floating 4s ease-in-out infinite;
+		}
+
+		.drop-text {
+			font-family: var(--font-display);
+			font-size: 1.2rem;
+			font-weight: 600;
+			margin-bottom: 0.5rem;
+		}
+
+		.drop-hint {
 			font-family: var(--font-mono);
-			font-size: 0.78rem;
-			color: var(--low);
+			color: var(--text-secondary);
+			font-size: 0.8rem;
 		}
 
-		.file-info.visible {
+		.endpoint-selector {
 			display: flex;
+			gap: 1rem;
+			margin-top: 1.5rem;
+			justify-content: center;
 		}
 
-		.file-name-display {
-			max-width: 320px;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		.btn-clear-file {
-			background: none;
-			border: none;
-			color: var(--text-muted);
+		.endpoint-btn {
+			background: rgba(30, 41, 59, 0.6);
+			border: 1px solid var(--glass-border);
+			color: var(--text-secondary);
+			padding: 0.5rem 1.5rem;
+			border-radius: 30px;
+			font-family: var(--font-mono);
+			font-size: 0.9rem;
 			cursor: pointer;
-			font-size: 1rem;
-			padding: 0 2px;
-			line-height: 1;
-			transition: color 0.2s;
+			transition: all 0.2s ease;
 		}
 
-		.btn-clear-file:hover {
-			color: var(--critical);
+		.endpoint-btn.active {
+			background: var(--primary);
+			color: white;
+			border-color: var(--primary);
+			box-shadow: 0 0 15px var(--primary-glow);
 		}
 
-		/* ── SCAN BUTTON (standalone) ── */
-		.btn-analyze {
-			background: linear-gradient(135deg, var(--accent2), var(--accent3)) !important;
-			border: none !important;
-			color: #fff !important;
-			font-family: var(--font-display) !important;
-			font-size: 1rem !important;
-			font-weight: 600 !important;
-			letter-spacing: 2px !important;
-			padding: 0.85rem 2.5rem !important;
-			border-radius: 8px !important;
-			transition: all 0.2s;
-			text-transform: uppercase;
+		.scan-btn {
+			background: linear-gradient(135deg, var(--primary), var(--accent));
+			color: white;
+			border: none;
+			padding: 1rem 3rem;
+			border-radius: 30px;
+			font-family: var(--font-display);
+			font-weight: 600;
+			font-size: 1.1rem;
+			letter-spacing: 1px;
+			cursor: pointer;
+			margin-top: 2rem;
 			width: 100%;
-			margin-top: 1rem;
+			transition: transform 0.2s, box-shadow 0.2s;
+			box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
 		}
 
-		.btn-analyze:hover {
-			transform: translateY(-1px);
-			box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4) !important;
+		.scan-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 15px 30px rgba(59, 130, 246, 0.6);
 		}
 
-		.btn-analyze:active {
-			transform: translateY(0);
+		.scan-btn:disabled {
+			background: #334155;
+			color: #94a3b8;
+			box-shadow: none;
+			cursor: not-allowed;
+			transform: none;
 		}
 
-		.btn-analyze:disabled {
-			opacity: 0.5;
-			transform: none !important;
+		.stats-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 1.5rem;
+			margin-bottom: 2rem;
 		}
 
-		/* ── STAT CARDS ── */
 		.stat-card {
-			background: var(--bg-card);
-			border: 1px solid var(--border);
-			border-radius: 12px;
-			padding: 1.25rem 1.5rem;
 			display: flex;
 			align-items: center;
 			gap: 1rem;
-			transition: border-color 0.2s, transform 0.2s;
 		}
 
-		.stat-card:hover {
-			transform: translateY(-2px);
-			border-color: rgba(0, 255, 224, 0.3);
-		}
-
-		.stat-icon {
-			width: 48px;
-			height: 48px;
-			border-radius: 10px;
+		.stat-card-icon {
+			width: 50px;
+			height: 50px;
+			border-radius: 12px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			font-size: 1.4rem;
-			flex-shrink: 0;
+			font-size: 1.5rem;
+			font-weight: bold;
 		}
+
+		.stat-card.total .stat-card-icon { background: rgba(59, 130, 246, 0.1); color: var(--primary); border: 1px solid rgba(59, 130, 246, 0.2); }
+		.stat-card.critical .stat-card-icon { background: rgba(239, 68, 68, 0.1); color: var(--critical); border: 1px solid rgba(239, 68, 68, 0.2); }
+		.stat-card.high .stat-card-icon { background: rgba(249, 115, 22, 0.1); color: var(--high); border: 1px solid rgba(249, 115, 22, 0.2); }
+		.stat-card.medium .stat-card-icon { background: rgba(234, 179, 8, 0.1); color: var(--medium); border: 1px solid rgba(234, 179, 8, 0.2); }
 
 		.stat-value {
 			font-family: var(--font-display);
 			font-size: 2rem;
 			font-weight: 700;
 			line-height: 1;
+			margin-bottom: 0.25rem;
 		}
 
 		.stat-label {
+			font-family: var(--font-mono);
 			font-size: 0.75rem;
-			color: var(--text-dim);
+			color: var(--text-secondary);
+			text-transform: uppercase;
 			letter-spacing: 1px;
-			text-transform: uppercase;
-			margin-top: 2px;
 		}
 
-		.stat-total .stat-icon { background: rgba(0, 255, 224, 0.1); color: var(--accent); }
-		.stat-total .stat-value { color: var(--accent); }
-		.stat-critical .stat-icon { background: rgba(255, 45, 85, 0.1); color: var(--critical); }
-		.stat-critical .stat-value { color: var(--critical); }
-		.stat-high .stat-icon { background: rgba(255, 140, 0, 0.1); color: var(--high); }
-		.stat-high .stat-value { color: var(--high); }
-		.stat-medium .stat-icon { background: rgba(255, 214, 10, 0.1); color: var(--medium); }
-		.stat-medium .stat-value { color: var(--medium); }
-
-		/* ── ALERTS TABLE ── */
-		.alerts-table-wrapper {
-			overflow-x: auto;
-			border-radius: 8px;
+		.charts-row {
+			display: grid;
+			grid-template-columns: 1fr 2fr;
+			gap: 1.5rem;
+			margin-bottom: 2rem;
 		}
 
-		.alerts-table {
-			width: 100%;
-			border-collapse: collapse;
-			font-size: 0.88rem;
-		}
-
-		.alerts-table thead tr {
-			background: rgba(0, 255, 224, 0.05);
-			border-bottom: 1px solid var(--border);
-		}
-
-		.alerts-table thead th {
-			padding: 0.85rem 1rem;
-			font-family: var(--font-mono);
-			font-size: 0.7rem;
-			color: var(--accent);
-			letter-spacing: 3px;
-			text-transform: uppercase;
-			font-weight: 400;
-			white-space: nowrap;
-		}
-
-		.alerts-table tbody tr {
-			border-bottom: 1px solid rgba(30, 45, 64, 0.6);
-			transition: background 0.15s;
-			animation: rowIn 0.3s ease forwards;
-			opacity: 0;
-		}
-
-		@keyframes rowIn {
-			from { opacity: 0; transform: translateX(-10px); }
-			to { opacity: 1; transform: translateX(0); }
-		}
-
-		.alerts-table tbody tr:hover {
-			background: rgba(0, 255, 224, 0.03);
-		}
-
-		.alerts-table tbody td {
-			padding: 0.85rem 1rem;
-			color: var(--text-primary);
-			vertical-align: middle;
-		}
-
-		.row-num {
-			font-family: var(--font-mono);
-			font-size: 0.75rem;
-			color: var(--text-muted);
-		}
-
-		.alert-message {
-			font-family: var(--font-mono);
-			font-size: 0.85rem;
-			color: var(--text-primary);
-		}
-
-		/* ── SEVERITY BADGES ── */
-		.badge-severity {
-			display: inline-flex;
-			align-items: center;
-			gap: 6px;
-			padding: 4px 12px;
-			border-radius: 20px;
-			font-family: var(--font-mono);
-			font-size: 0.7rem;
-			font-weight: 600;
-			letter-spacing: 2px;
-			text-transform: uppercase;
-		}
-
-		.badge-CRITICAL { background: rgba(255,45,85,0.15); color: var(--critical); border: 1px solid rgba(255,45,85,0.3); box-shadow: 0 0 8px rgba(255,45,85,0.2); }
-		.badge-HIGH { background: rgba(255,140,0,0.15); color: var(--high); border: 1px solid rgba(255,140,0,0.3); }
-		.badge-MEDIUM { background: rgba(255,214,10,0.12); color: var(--medium); border: 1px solid rgba(255,214,10,0.3); }
-		.badge-LOW { background: rgba(48,209,88,0.12); color: var(--low); border: 1px solid rgba(48,209,88,0.3); }
-
-		.badge-dot {
-			width: 6px;
-			height: 6px;
-			border-radius: 50%;
-			background: currentColor;
-		}
-
-		/* ── CHARTS ── */
-		.chart-container {
+		.chart-wrapper {
 			position: relative;
-			height: 260px;
+			height: 300px;
+			width: 100%;
 		}
 
-		/* ── EMPTY / ERROR STATES ── */
-		.empty-state {
-			text-align: center;
-			padding: 4rem 2rem;
-			color: var(--text-muted);
+		.table-responsive {
+			overflow-x: auto;
 		}
 
-		.empty-state i {
-			font-size: 3rem;
-			margin-bottom: 1rem;
-			opacity: 0.3;
-			display: block;
+		table {
+			width: 100%;
+			border-collapse: separate;
+			border-spacing: 0 8px;
 		}
 
-		.empty-state p {
+		th {
 			font-family: var(--font-mono);
 			font-size: 0.8rem;
+			color: var(--text-secondary);
+			text-transform: uppercase;
 			letter-spacing: 2px;
+			padding: 0 1rem 0.5rem;
+			text-align: left;
+			border-bottom: 1px solid var(--glass-border);
 		}
 
-		/* ── LOADER ── */
-		.scan-loader {
+		td {
+			background: rgba(30, 41, 59, 0.4);
+			padding: 1rem;
+			font-size: 0.9rem;
+			transition: background 0.2s;
+		}
+
+		tr:hover td {
+			background: rgba(59, 130, 246, 0.1);
+		}
+
+		td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; font-family: var(--font-mono); color: var(--text-secondary); }
+		td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-family: var(--font-mono); }
+
+		.badge {
+			padding: 0.4rem 0.8rem;
+			border-radius: 20px;
+			font-size: 0.75rem;
+			font-weight: 600;
+			font-family: var(--font-mono);
+			letter-spacing: 1px;
+		}
+
+		.badge-critical { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.5); }
+		.badge-high { background: rgba(249, 115, 22, 0.2); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.5); }
+		.badge-medium { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.5); }
+		.badge-low { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.5); }
+
+		#resultsArea {
+			display: none;
+			animation: slideIn 0.8s ease-out;
+		}
+
+		.loader-area {
 			display: none;
 			text-align: center;
-			padding: 3rem;
+			padding: 4rem 0;
 		}
 
-		.scan-loader.active {
-			display: block;
-		}
-
-		.scan-ring {
-			width: 60px;
-			height: 60px;
-			border: 2px solid var(--border);
-			border-top-color: var(--accent);
+		.spinner {
+			width: 50px;
+			height: 50px;
+			border: 3px solid rgba(59, 130, 246, 0.3);
 			border-radius: 50%;
-			animation: spin 0.8s linear infinite;
+			border-top-color: var(--primary);
+			animation: spin 1s ease-in-out infinite;
 			margin: 0 auto 1rem;
 		}
 
-		@keyframes spin { to { transform: rotate(360deg); } }
-
-		.scan-text {
-			font-family: var(--font-mono);
-			font-size: 0.75rem;
-			color: var(--accent);
-			letter-spacing: 3px;
-			animation: blink 1s steps(1) infinite;
+		@keyframes spin {
+			to { transform: rotate(360deg); }
 		}
 
-		@keyframes blink { 50% { opacity: 0; } }
-
-		/* ── ERROR ALERT ── */
-		.error-box {
-			background: rgba(255, 45, 85, 0.08);
-			border: 1px solid rgba(255, 45, 85, 0.3);
-			border-radius: 8px;
-			padding: 1rem 1.25rem;
-			color: var(--critical);
-			font-family: var(--font-mono);
-			font-size: 0.82rem;
-			display: none;
-			margin-top: 1rem;
-		}
-
-		.error-box.active {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-		}
-
-		/* ── ENDPOINT TOGGLE ── */
-		.endpoint-toggle {
-			display: flex;
-			gap: 8px;
-			margin-bottom: 1rem;
-		}
-
-		.ep-btn {
-			background: var(--bg-input);
-			border: 1px solid var(--border);
-			color: var(--text-dim);
-			font-family: var(--font-mono);
-			font-size: 0.75rem;
-			padding: 6px 16px;
-			border-radius: 6px;
-			cursor: pointer;
-			transition: all 0.2s;
-			letter-spacing: 1px;
-		}
-
-		.ep-btn.active,
-		.ep-btn:hover {
-			border-color: var(--accent);
-			color: var(--accent);
-			background: rgba(0, 255, 224, 0.05);
-		}
-
-		/* ── TERMINAL LOG ── */
-		.terminal {
-			background: #060a0f;
-			border: 1px solid var(--border);
+		.log-console {
+			background: #020617;
+			border: 1px solid var(--glass-border);
 			border-radius: 8px;
 			padding: 1rem;
-			font-family: var(--font-mono);
-			font-size: 0.75rem;
-			color: #4a5568;
-			max-height: 120px;
+			max-height: 150px;
 			overflow-y: auto;
-			line-height: 1.8;
+			font-family: var(--font-mono);
+			font-size: 0.8rem;
+			margin-top: 1.5rem;
 		}
 
-		.terminal .log-line { display: block; }
-		.terminal .log-time { color: var(--text-muted); }
-		.terminal .log-ok { color: var(--low); }
-		.terminal .log-warn { color: var(--medium); }
-		.terminal .log-err { color: var(--critical); }
-		.terminal .log-info { color: var(--accent2); }
+		.log-console span { display: block; margin-bottom: 4px; }
+		.log-time { color: var(--text-secondary); }
+		.log-msg { color: #e2e8f0; }
+		.log-err { color: var(--critical); }
+		.log-ok { color: var(--secondary); }
 
-		/* ── SCROLLBAR ── */
-		::-webkit-scrollbar { width: 6px; height: 6px; }
-		::-webkit-scrollbar-track { background: var(--bg-base); }
-		::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-		::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
+		.error-toast {
+			position: fixed;
+			bottom: 20px;
+			right: 20px;
+			background: var(--critical);
+			color: white;
+			padding: 1rem 2rem;
+			border-radius: 8px;
+			box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+			transform: translateY(100px);
+			opacity: 0;
+			transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+			z-index: 2000;
+			font-family: var(--font-display);
+			font-weight: 600;
+		}
 
-		/* ── RESPONSIVE ── */
+		.error-toast.show {
+			transform: translateY(0);
+			opacity: 1;
+		}
+
+		.export-btn {
+			background: transparent;
+			border: 1px solid var(--primary);
+			color: var(--primary);
+			padding: 0.5rem 1rem;
+			border-radius: 8px;
+			font-family: var(--font-mono);
+			font-size: 0.8rem;
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+
+		.export-btn:hover {
+			background: rgba(59, 130, 246, 0.1);
+			box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+		}
+
 		@media (max-width: 768px) {
-			.topbar { padding: 0 1rem; }
-			.main-content { padding: 1rem; }
-			.brand-sub { display: none; }
+			.charts-row { grid-template-columns: 1fr; }
+			.main-content { padding: 0 1rem; margin: 2rem auto; }
+			.header-title { font-size: 1.8rem; }
 		}
 	</style>
 </head>
-
 <body>
-	<div class="app-wrapper">
 
-		<nav class="topbar">
-			<div class="topbar-brand">
-				<div class="brand-icon">🛡️</div>
-				<div>
-					<div class="brand-name">LogPulse</div>
-					<div class="brand-sub">LogPulse v1.0</div>
-				</div>
-			</div>
-			<div class="topbar-status">
-				<div class="status-dot"></div>
-				<span id="serverStatus">CONNECTING...</span>
-			</div>
-		</nav>
+	<nav class="topbar">
+		<div class="brand">
+			<div class="brand-circle">LP</div>
+			<div class="brand-text">LogPulse</div>
+		</div>
+		<div class="status-indicator">
+			<div class="pulse-dot" id="pulseDot"></div>
+			<span id="statusText">CONNECTING</span>
+		</div>
+	</nav>
 
-		<div class="main-content">
+	<div class="main-content">
+		<div class="glass-panel" style="margin-bottom: 2rem;">
+			<div class="header-title">Security Log Analysis</div>
+			<div class="header-subtitle">AI-Powered Threat Detection Engine</div>
 
-			<div class="analyze-form mb-4">
-				<div class="section-label">// Scan Target</div>
-				<div class="section-title mb-3">Log File Analysis</div>
-
-				<div class="endpoint-toggle">
-					<button class="ep-btn active" onclick="setEndpoint('analyze', this)">/analyze</button>
-					<button class="ep-btn" onclick="setEndpoint('summary', this)">/summary</button>
-				</div>
-
-				<div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-					<input type="file" id="fileInput" accept=".xml,.log,.txt,.json,.csv" />
-					<i class="bi bi-cloud-upload drop-icon" id="dropIcon"></i>
-					<div class="drop-title" id="dropTitle">DROP LOG FILE HERE</div>
-					<div class="drop-sub" id="dropSub">OR CLICK TO BROWSE &nbsp;·&nbsp; XML, LOG, TXT, JSON, CSV</div>
-				</div>
-
-				<div class="file-info" id="fileInfo">
-					<i class="bi bi-file-earmark-text"></i>
-					<span class="file-name-display" id="fileNameDisplay">—</span>
-					<span style="color:var(--text-muted);font-size:0.7rem;" id="fileSizeDisplay"></span>
-					<button class="btn-clear-file" onclick="clearFile(event)" title="Remove file">
-						<i class="bi bi-x-circle"></i>
-					</button>
-				</div>
-
-				<div class="error-box" id="errorBox">
-					<i class="bi bi-exclamation-triangle-fill"></i>
-					<span id="errorMsg">Error message here</span>
-				</div>
-
-				<button class="btn btn-analyze" id="analyzeBtn" onclick="runAnalysis()">
-					<i class="bi bi-search me-2"></i>SCAN FILE
-				</button>
-
-				<div class="terminal mt-3" id="terminalLog">
-					<span class="log-line"><span class="log-time">[SYSTEM] </span><span class="log-info">LogPulse initialized.</span></span>
-					<span class="log-line"><span class="log-time">[SYSTEM] </span><span class="log-ok">Backend connection ready on port 8080.</span></span>
-					<span class="log-line"><span class="log-time">[SYSTEM] </span><span class="log-info">Upload a log file and press SCAN to begin.</span></span>
-				</div>
+			<div class="drop-area" id="dropArea">
+				<input type="file" id="fileInput" accept=".xml,.log,.txt,.json,.csv" />
+				<div class="drop-icon" id="dropIcon">LP</div>
+				<div class="drop-text" id="dropText">Drag and drop log file here</div>
+				<div class="drop-hint" id="dropHint">Supports XML, LOG, TXT, JSON, CSV formats</div>
 			</div>
 
-			<div class="scan-loader" id="scanLoader">
-				<div class="scan-ring"></div>
-				<div class="scan-text">SCANNING FILE...</div>
+			<div class="endpoint-selector">
+				<button class="endpoint-btn active" data-endpoint="analyze">/analyze</button>
+				<button class="endpoint-btn" data-endpoint="summary">/summary</button>
 			</div>
 
-			<div id="resultsSection" style="display:none;">
+			<button class="scan-btn" id="scanBtn">INITIATE SCAN</button>
 
-				<div class="row g-3 mb-4">
-					<div class="col-6 col-md-3">
-						<div class="stat-card stat-total">
-							<div class="stat-icon"><i class="bi bi-shield-exclamation"></i></div>
-							<div>
-								<div class="stat-value" id="statTotal">0</div>
-								<div class="stat-label">Total Alerts</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-6 col-md-3">
-						<div class="stat-card stat-critical">
-							<div class="stat-icon"><i class="bi bi-exclamation-octagon-fill"></i></div>
-							<div>
-								<div class="stat-value" id="statCritical">0</div>
-								<div class="stat-label">Critical</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-6 col-md-3">
-						<div class="stat-card stat-high">
-							<div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-							<div>
-								<div class="stat-value" id="statHigh">0</div>
-								<div class="stat-label">High</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-6 col-md-3">
-						<div class="stat-card stat-medium">
-							<div class="stat-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
-							<div>
-								<div class="stat-value" id="statMedium">0</div>
-								<div class="stat-label">Medium</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="row g-3 mb-4">
-
-					<div class="col-md-4">
-						<div class="panel panel-glow h-100">
-							<div class="section-label mb-1">// Severity Breakdown</div>
-							<div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:1rem;">Alert Distribution</div>
-							<div class="chart-container">
-								<canvas id="doughnutChart"></canvas>
-							</div>
-						</div>
-					</div>
-
-					<div class="col-md-8">
-						<div class="panel panel-glow h-100">
-							<div class="section-label mb-1">// Alert Types</div>
-							<div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:1rem;">Alerts by Category</div>
-							<div class="chart-container">
-								<canvas id="barChart"></canvas>
-							</div>
-						</div>
-					</div>
-
-				</div>
-
-				<div class="panel panel-glow">
-					<div class="d-flex justify-content-between align-items-center mb-3">
-						<div>
-							<div class="section-label">// Threat Intelligence</div>
-							<div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;">Detected Alerts</div>
-						</div>
-						<button class="ep-btn" onclick="exportCSV()">
-							<i class="bi bi-download me-1"></i>Export CSV
-						</button>
-					</div>
-
-					<div class="alerts-table-wrapper">
-						<table class="alerts-table">
-							<thead>
-								<tr>
-									<th>#</th>
-									<th>Message</th>
-									<th>Severity</th>
-									<th>Category</th>
-								</tr>
-							</thead>
-							<tbody id="alertsTableBody"></tbody>
-						</table>
-					</div>
-
-					<div class="empty-state" id="noAlertsMsg" style="display:none;">
-						<i class="bi bi-shield-check"></i>
-						<p>NO THREATS DETECTED</p>
-					</div>
-				</div>
-
+			<div class="log-console" id="logConsole">
+				<span><span class="log-time">[SYSTEM]</span> <span class="log-ok">LogPulse Engine initialized. Ready for input.</span></span>
 			</div>
-
 		</div>
 
+		<div class="loader-area" id="loaderArea">
+			<div class="spinner"></div>
+			<div style="font-family: var(--font-mono); color: var(--primary); letter-spacing: 2px;">PROCESSING LOGS...</div>
+		</div>
+
+		<div id="resultsArea">
+			<div class="stats-grid">
+				<div class="glass-panel stat-card total">
+					<div class="stat-card-icon">T</div>
+					<div>
+						<div class="stat-value" id="valTotal">0</div>
+						<div class="stat-label">Total Alerts</div>
+					</div>
+				</div>
+				<div class="glass-panel stat-card critical">
+					<div class="stat-card-icon">!</div>
+					<div>
+						<div class="stat-value" id="valCritical">0</div>
+						<div class="stat-label">Critical Alerts</div>
+					</div>
+				</div>
+				<div class="glass-panel stat-card high">
+					<div class="stat-card-icon">H</div>
+					<div>
+						<div class="stat-value" id="valHigh">0</div>
+						<div class="stat-label">High Alerts</div>
+					</div>
+				</div>
+				<div class="glass-panel stat-card medium">
+					<div class="stat-card-icon">M</div>
+					<div>
+						<div class="stat-value" id="valMedium">0</div>
+						<div class="stat-label">Medium Alerts</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="charts-row">
+				<div class="glass-panel">
+					<div style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">Severity Breakdown</div>
+					<div class="chart-wrapper">
+						<canvas id="doughnutChart"></canvas>
+					</div>
+				</div>
+				<div class="glass-panel">
+					<div style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">Alert Distribution by Category</div>
+					<div class="chart-wrapper">
+						<canvas id="barChart"></canvas>
+					</div>
+				</div>
+			</div>
+
+			<div class="glass-panel">
+				<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+					<div style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 600;">Detected Threats</div>
+					<button class="export-btn" id="exportBtn">Export CSV</button>
+				</div>
+				<div class="table-responsive">
+					<table id="alertsTable">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Message</th>
+								<th>Severity</th>
+								<th>Category</th>
+							</tr>
+						</thead>
+						<tbody id="alertsTbody"></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
 	</div>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script>
-		const API_BASE = '';
-		let currentEndpoint = 'analyze';
-		let doughnutChart = null;
-		let barChart = null;
-		let selectedFile = null;
+	<div class="error-toast" id="errorToast">Error occurred</div>
 
-		// ── Check server status ──
+	<script>
+		let activeEndpoint = 'analyze';
+		let selectedFile = null;
+		let dChart = null;
+		let bChart = null;
+
+		function logMessage(status, msg) {
+			const consoleEl = document.getElementById('logConsole');
+			const now = new Date().toISOString().split('T')[1].slice(0, 8);
+			const cls = status === 'ERR' ? 'log-err' : (status === 'OK' ? 'log-ok' : 'log-msg');
+			consoleEl.innerHTML += `<span><span class="log-time">[${now}]</span> <span class="${cls}">${msg}</span></span>`;
+			consoleEl.scrollTop = consoleEl.scrollHeight;
+		}
+
+		function showError(msg) {
+			const toast = document.getElementById('errorToast');
+			toast.textContent = msg;
+			toast.classList.add('show');
+			setTimeout(() => toast.classList.remove('show'), 4000);
+			logMessage('ERR', msg);
+		}
+
 		async function checkServer() {
 			try {
-				const r = await fetch(`${API_BASE}/analyze?path=ping`, {signal: AbortSignal.timeout(2000)});
-				document.getElementById('serverStatus').textContent = 'BACKEND ONLINE';
-				document.querySelector('.status-dot').style.background = 'var(--low)';
-			} catch {
-				document.getElementById('serverStatus').textContent = 'BACKEND OFFLINE';
-				document.querySelector('.status-dot').style.background = 'var(--critical)';
-				document.querySelector('.status-dot').style.boxShadow = '0 0 6px var(--critical)';
+				const ctrl = new AbortController();
+				const timeout = setTimeout(() => ctrl.abort(), 2000);
+				const res = await fetch('/analyze?path=ping', { method: 'GET', signal: ctrl.signal });
+				clearTimeout(timeout);
+				document.getElementById('statusText').textContent = 'SYSTEM ONLINE';
+				document.getElementById('pulseDot').style.backgroundColor = 'var(--secondary)';
+				document.getElementById('pulseDot').style.boxShadow = '0 0 10px var(--secondary)';
+			} catch (e) {
+				document.getElementById('statusText').textContent = 'SYSTEM OFFLINE';
+				document.getElementById('pulseDot').style.backgroundColor = 'var(--critical)';
+				document.getElementById('pulseDot').style.boxShadow = '0 0 10px var(--critical)';
 			}
 		}
-		checkServer();
 
-		// ── Endpoint toggle ──
-		function setEndpoint(ep, btn) {
-			currentEndpoint = ep;
-			document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
-			btn.classList.add('active');
-			addLog('info', `Endpoint switched to /${ep}`);
-		}
+		const dropArea = document.getElementById('dropArea');
+		const fileInput = document.getElementById('fileInput');
 
-		// ── Terminal log ──
-		function addLog(type, msg) {
-			const terminal = document.getElementById('terminalLog');
-			const now = new Date().toLocaleTimeString('en', {hour12: false});
-			const line = document.createElement('span');
-			line.className = 'log-line';
-			line.innerHTML = `<span class="log-time">[${now}] </span><span class="log-${type}">${msg}</span>`;
-			terminal.appendChild(line);
-			terminal.scrollTop = terminal.scrollHeight;
-		}
-
-		// ── File size formatter ──
-		function formatBytes(bytes) {
-			if (bytes < 1024) return `${bytes} B`;
-			if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-			return `${(bytes / 1048576).toFixed(1)} MB`;
-		}
-
-		// ── File input change ──
-		document.getElementById('fileInput').addEventListener('change', function(e) {
-			handleFile(e.target.files[0]);
-		});
-
-		function handleFile(file) {
-			if (!file) return;
-			selectedFile = file;
-
-			const dropZone = document.getElementById('dropZone');
-			const fileInfo = document.getElementById('fileInfo');
-			const dropIcon = document.getElementById('dropIcon');
-			const dropTitle = document.getElementById('dropTitle');
-			const dropSub = document.getElementById('dropSub');
-
-			// Update drop zone appearance
-			dropZone.classList.add('has-file');
-			dropIcon.className = 'bi bi-file-earmark-check drop-icon';
-			dropTitle.textContent = 'FILE SELECTED';
-			dropSub.textContent = 'CLICK TO CHANGE FILE';
-
-			// Show file info bar
-			document.getElementById('fileNameDisplay').textContent = file.name;
-			document.getElementById('fileSizeDisplay').textContent = formatBytes(file.size);
-			fileInfo.classList.add('visible');
-
-			hideError();
-			addLog('ok', `File selected: ${file.name} (${formatBytes(file.size)})`);
-		}
-
-		function clearFile(e) {
-			e.stopPropagation();
-			selectedFile = null;
-			document.getElementById('fileInput').value = '';
-
-			const dropZone = document.getElementById('dropZone');
-			const dropIcon = document.getElementById('dropIcon');
-			const dropTitle = document.getElementById('dropTitle');
-			const dropSub = document.getElementById('dropSub');
-
-			dropZone.classList.remove('has-file');
-			dropIcon.className = 'bi bi-cloud-upload drop-icon';
-			dropTitle.textContent = 'DROP LOG FILE HERE';
-			dropSub.textContent = 'OR CLICK TO BROWSE · XML, LOG, TXT, JSON, CSV';
-			document.getElementById('fileInfo').classList.remove('visible');
-
-			addLog('warn', 'File cleared.');
-		}
-
-		// ── Drag and drop ──
-		const dropZone = document.getElementById('dropZone');
-
-		dropZone.addEventListener('dragover', function(e) {
+		dropArea.addEventListener('dragover', e => {
 			e.preventDefault();
-			this.classList.add('dragover');
+			dropArea.classList.add('active');
 		});
 
-		dropZone.addEventListener('dragleave', function() {
-			this.classList.remove('dragover');
+		dropArea.addEventListener('dragleave', () => {
+			dropArea.classList.remove('active');
 		});
 
-		dropZone.addEventListener('drop', function(e) {
+		dropArea.addEventListener('drop', e => {
 			e.preventDefault();
-			this.classList.remove('dragover');
-			const file = e.dataTransfer.files[0];
-			if (file) {
-				handleFile(file);
-				// Sync with the file input for form compatibility
+			dropArea.classList.remove('active');
+			if (e.dataTransfer.files.length) {
 				const dt = new DataTransfer();
-				dt.items.add(file);
-				document.getElementById('fileInput').files = dt.files;
+				dt.items.add(e.dataTransfer.files[0]);
+				fileInput.files = dt.files;
+				handleFileSelect(e.dataTransfer.files[0]);
 			}
 		});
 
-		// ── Main analysis ──
-		async function runAnalysis() {
+		fileInput.addEventListener('change', e => {
+			if (e.target.files.length) {
+				handleFileSelect(e.target.files[0]);
+			}
+		});
+
+		function handleFileSelect(file) {
+			selectedFile = file;
+			document.getElementById('dropText').textContent = file.name;
+			document.getElementById('dropHint').textContent = `${(file.size / 1024).toFixed(2)} KB`;
+			document.getElementById('dropIcon').textContent = 'ok';
+			logMessage('OK', `File selected: ${file.name}`);
+		}
+
+		document.querySelectorAll('.endpoint-btn').forEach(btn => {
+			btn.addEventListener('click', e => {
+				document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+				e.target.classList.add('active');
+				activeEndpoint = e.target.getAttribute('data-endpoint');
+				logMessage('INFO', `Endpoint switched to /${activeEndpoint}`);
+			});
+		});
+
+		document.getElementById('scanBtn').addEventListener('click', async () => {
 			if (!selectedFile) {
-				showError('Please upload a log file before scanning.');
+				showError('Validation Error: No log file uploaded');
 				return;
 			}
-
-			hideError();
-			showLoader(true);
-			document.getElementById('resultsSection').style.display = 'none';
-			document.getElementById('analyzeBtn').disabled = true;
-
-			addLog('info', `Scanning: ${selectedFile.name}`);
-			addLog('info', `Endpoint: /${currentEndpoint}`);
+			
+			const scanBtn = document.getElementById('scanBtn');
+			scanBtn.disabled = true;
+			document.getElementById('resultsArea').style.display = 'none';
+			document.getElementById('loaderArea').style.display = 'block';
+			logMessage('INFO', `Initiating scan process via /${activeEndpoint}`);
 
 			try {
-				const formData = new FormData();
-				formData.append('file', selectedFile);
+				const fd = new FormData();
+				fd.append('file', selectedFile);
 
-				const url = `${API_BASE}/${currentEndpoint}`;
-				const res = await fetch(url, {
+				const res = await fetch(`/${activeEndpoint}`, {
 					method: 'POST',
-					body: formData
+					body: fd
 				});
 
-				const data = await res.json();
-
 				if (!res.ok) {
-					const errMsg = data.error || 'Unknown error from server.';
-					showError(errMsg);
-					addLog('err', `Error: ${errMsg}`);
-					return;
+					const data = await res.json().catch(() => ({}));
+					throw new Error(data.error || `HTTP ${res.status}`);
 				}
 
-				// Normalize: /analyze returns array, /summary returns {alerts:[...], totalAlerts:N}
+				const data = await res.json();
 				const alerts = Array.isArray(data) ? data : (data.alerts || []);
-				addLog('ok', `Scan complete. ${alerts.length} alert(s) found.`);
-				renderResults(alerts);
-
-			} catch (err) {
-				showError('Could not connect to backend. Make sure the Spring Boot app is running on port 8080.');
-				addLog('err', 'Connection failed. Is the backend running?');
+				
+				logMessage('OK', `Scan completed successfully. Found ${alerts.length} vulnerabilities.`);
+				renderDashboard(alerts);
+			} catch (e) {
+				showError(`Analysis failed: ${e.message}`);
 			} finally {
-				showLoader(false);
-				document.getElementById('analyzeBtn').disabled = false;
+				scanBtn.disabled = false;
+				document.getElementById('loaderArea').style.display = 'none';
 			}
+		});
+
+		function inferCategory(msg) {
+			const l = String(msg).toLowerCase();
+			if (l.includes('brute')) return 'Brute Force';
+			if (l.includes('odd') || l.includes('login')) return 'Suspicious Login';
+			if (l.includes('new') || l.includes('user')) return 'Account Creation';
+			if (l.includes('ip') || l.includes('multiple')) return 'Multi IP Login';
+			return 'Anomaly';
 		}
 
-		// ── Render ──
-		function renderResults(alerts) {
-			const counts = {CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0};
-			alerts.forEach(a => {const s = (a.severity || 'LOW').toUpperCase(); counts[s] = (counts[s] || 0) + 1;});
+		function renderDashboard(alerts) {
+			document.getElementById('resultsArea').style.display = 'block';
+			
+			const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+			const cats = {};
 
-			document.getElementById('statTotal').textContent = alerts.length;
-			document.getElementById('statCritical').textContent = counts.CRITICAL;
-			document.getElementById('statHigh').textContent = counts.HIGH;
-			document.getElementById('statMedium').textContent = counts.MEDIUM;
-
-			const tbody = document.getElementById('alertsTableBody');
+			const tbody = document.getElementById('alertsTbody');
 			tbody.innerHTML = '';
-			document.getElementById('noAlertsMsg').style.display = alerts.length === 0 ? 'block' : 'none';
 
 			alerts.forEach((alert, i) => {
 				const sev = (alert.severity || 'LOW').toUpperCase();
-				const cat = detectCategory(alert.message || '');
+				if (counts[sev] !== undefined) counts[sev]++;
+				else counts.LOW++;
+				
+				const cat = inferCategory(alert.message);
+				cats[cat] = (cats[cat] || 0) + 1;
+
 				const tr = document.createElement('tr');
-				tr.style.animationDelay = `${i * 60}ms`;
 				tr.innerHTML = `
-					<td class="row-num">${String(i + 1).padStart(2, '0')}</td>
-					<td class="alert-message">${escHtml(alert.message || '-')}</td>
-					<td><span class="badge-severity badge-${sev}"><span class="badge-dot"></span>${sev}</span></td>
-					<td style="font-size:0.78rem;color:var(--text-dim);font-family:var(--font-mono);">${cat}</td>
+					<td>#${String(i+1).padStart(3, '0')}</td>
+					<td style="color: #e2e8f0;">${alert.message.replace(/</g, '&lt;')}</td>
+					<td><span class="badge badge-${sev.toLowerCase()}">${sev}</span></td>
+					<td>${cat}</td>
 				`;
 				tbody.appendChild(tr);
 			});
 
-			renderDoughnut(counts);
-			renderBar(alerts);
+			document.getElementById('valTotal').textContent = alerts.length;
+			document.getElementById('valCritical').textContent = counts.CRITICAL;
+			document.getElementById('valHigh').textContent = counts.HIGH;
+			document.getElementById('valMedium').textContent = counts.MEDIUM;
 
-			document.getElementById('resultsSection').style.display = 'block';
-			document.getElementById('resultsSection').scrollIntoView({behavior: 'smooth', block: 'start'});
+			drawCharts(counts, cats);
+			
+			document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 
-		function detectCategory(msg) {
-			msg = msg.toLowerCase();
-			if (msg.includes('brute')) return 'BRUTE_FORCE';
-			if (msg.includes('odd hour') || msg.includes('login')) return 'SUSPICIOUS_LOGIN';
-			if (msg.includes('new user') || msg.includes('user:')) return 'ACCOUNT_CREATION';
-			if (msg.includes('multiple ip') || msg.includes('ip:')) return 'MULTI_IP_LOGIN';
-			return 'UNKNOWN';
-		}
-
-		// ── Charts ──
-		const chartDefaults = {
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: {legend: {labels: {color: '#718096', font: {family: 'Share Tech Mono', size: 11}}}}
-		};
-
-		function renderDoughnut(counts) {
-			if (doughnutChart) doughnutChart.destroy();
-			const ctx = document.getElementById('doughnutChart').getContext('2d');
-			doughnutChart = new Chart(ctx, {
+		function drawCharts(counts, cats) {
+			Chart.defaults.color = '#94a3b8';
+			Chart.defaults.font.family = "'Share Tech Mono', monospace";
+			
+			if (dChart) dChart.destroy();
+			dChart = new Chart(document.getElementById('doughnutChart'), {
 				type: 'doughnut',
 				data: {
-					labels: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+					labels: ['Critical', 'High', 'Medium', 'Low'],
 					datasets: [{
-						data: [counts.CRITICAL, counts.HIGH, counts.MEDIUM, counts.LOW || 0],
-						backgroundColor: ['rgba(255,45,85,0.8)', 'rgba(255,140,0,0.8)', 'rgba(255,214,10,0.8)', 'rgba(48,209,88,0.8)'],
-						borderColor: ['#ff2d55', '#ff8c00', '#ffd60a', '#30d158'],
-						borderWidth: 1,
-						hoverOffset: 6,
+						data: [counts.CRITICAL, counts.HIGH, counts.MEDIUM, counts.LOW],
+						backgroundColor: [
+							'rgba(239, 68, 68, 0.8)',
+							'rgba(249, 115, 22, 0.8)',
+							'rgba(234, 179, 8, 0.8)',
+							'rgba(16, 185, 129, 0.8)'
+						],
+						borderColor: [
+							'#ef4444', '#f97316', '#eab308', '#10b981'
+						],
+						borderWidth: 1
 					}]
 				},
 				options: {
-					...chartDefaults,
-					cutout: '68%',
+					responsive: true,
+					maintainAspectRatio: false,
+					cutout: '70%',
 					plugins: {
-						...chartDefaults.plugins,
-						legend: {position: 'bottom', labels: {color: '#718096', font: {family: 'Share Tech Mono', size: 10}, padding: 16}}
+						legend: { position: 'right' }
 					}
 				}
 			});
-		}
 
-		function renderBar(alerts) {
-			if (barChart) barChart.destroy();
-			const cats = {};
-			alerts.forEach(a => {const c = detectCategory(a.message || ''); cats[c] = (cats[c] || 0) + 1;});
-			const ctx = document.getElementById('barChart').getContext('2d');
-			barChart = new Chart(ctx, {
+			if (bChart) bChart.destroy();
+			bChart = new Chart(document.getElementById('barChart'), {
 				type: 'bar',
 				data: {
 					labels: Object.keys(cats),
 					datasets: [{
 						label: 'Alerts',
 						data: Object.values(cats),
-						backgroundColor: ['rgba(0,255,224,0.2)', 'rgba(0,102,255,0.2)', 'rgba(124,58,237,0.2)', 'rgba(255,45,85,0.2)'],
-						borderColor: ['#00ffe0', '#0066ff', '#7c3aed', '#ff2d55'],
+						backgroundColor: 'rgba(59, 130, 246, 0.4)',
+						borderColor: '#3b82f6',
 						borderWidth: 1,
-						borderRadius: 4,
+						borderRadius: 4
 					}]
 				},
 				options: {
-					...chartDefaults,
+					responsive: true,
+					maintainAspectRatio: false,
 					scales: {
-						x: {ticks: {color: '#4a5568', font: {family: 'Share Tech Mono', size: 10}}, grid: {color: 'rgba(30,45,64,0.5)'}},
-						y: {ticks: {color: '#4a5568', font: {family: 'Share Tech Mono', size: 10}, stepSize: 1}, grid: {color: 'rgba(30,45,64,0.5)'}}
+						y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { stepSize: 1 } },
+						x: { grid: { display: false } }
 					},
-					plugins: {...chartDefaults.plugins, legend: {display: false}}
+					plugins: {
+						legend: { display: false }
+					}
 				}
 			});
 		}
 
-		// ── Helpers ──
-		function showLoader(v) {
-			document.getElementById('scanLoader').classList.toggle('active', v);
-		}
-
-		function showError(msg) {
-			const box = document.getElementById('errorBox');
-			document.getElementById('errorMsg').textContent = msg;
-			box.classList.add('active');
-		}
-
-		function hideError() {
-			document.getElementById('errorBox').classList.remove('active');
-		}
-
-		function escHtml(str) {
-			return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-		}
-
-		// ── Export CSV ──
-		function exportCSV() {
-			const rows = [['#', 'Message', 'Severity', 'Category']];
-			document.querySelectorAll('#alertsTableBody tr').forEach((tr) => {
-				const tds = tr.querySelectorAll('td');
-				rows.push([
-					tds[0]?.textContent.trim(),
-					tds[1]?.textContent.trim(),
-					tds[2]?.textContent.trim(),
-					tds[3]?.textContent.trim(),
-				]);
+		document.getElementById('exportBtn').addEventListener('click', () => {
+			const rows = [['ID', 'Message', 'Severity', 'Category']];
+			document.querySelectorAll('#alertsTbody tr').forEach(tr => {
+				const cells = tr.querySelectorAll('td');
+				if(cells.length === 4) {
+					rows.push([
+						cells[0].textContent,
+						`"${cells[1].textContent.replace(/"/g, '""')}"`,
+						cells[2].textContent,
+						cells[3].textContent
+					]);
+				}
 			});
-			const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+			
+			const content = rows.map(r => r.join(',')).join('\\n');
+			const blob = new Blob([content], { type: 'text/csv' });
+			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
-			a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-			a.download = 'security-alerts.csv';
+			a.href = url;
+			a.download = 'logpulse_report.csv';
 			a.click();
-			addLog('ok', 'Alerts exported to security-alerts.csv');
-		}
+			URL.revokeObjectURL(url);
+			logMessage('OK', 'Exported analysis report to CSV');
+		});
+
+		window.addEventListener('load', checkServer);
 	</script>
 </body>
-
 </html>
