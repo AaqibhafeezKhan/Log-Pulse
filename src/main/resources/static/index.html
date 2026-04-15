@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>LogPulse</title>
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+
+	<link
+		href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500&display=swap"
+		rel="stylesheet" />
+
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+	<style>
+		:root {
+			--bg-base: #080c12;
+			--bg-panel: #0d1117;
+			--bg-card: #111827;
+			--bg-input: #0a0f18;
+			--border: #1e2d40;
+			--border-glow: #00ffe0;
+			--accent: #00ffe0;
+			--accent2: #0066ff;
+			--accent3: #7c3aed;
+			--text-primary: #e2e8f0;
+			--text-muted: #4a5568;
+			--text-dim: #718096;
+			--critical: #ff2d55;
+			--high: #ff8c00;
+			--medium: #ffd60a;
+			--low: #30d158;
+			--font-mono: 'Share Tech Mono', monospace;
+			--font-display: 'Rajdhani', sans-serif;
+			--font-body: 'Inter', sans-serif;
+		}
+
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			background-color: var(--bg-base);
+			color: var(--text-primary);
+			font-family: var(--font-body);
+			min-height: 100vh;
+			overflow-x: hidden;
+		}
+
+		/* ── GRID BACKGROUND ── */
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background-image:
+				linear-gradient(rgba(0, 255, 224, 0.03) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(0, 255, 224, 0.03) 1px, transparent 1px);
+			background-size: 40px 40px;
+			pointer-events: none;
+			z-index: 0;
+		}
+
+		.app-wrapper {
+			position: relative;
+			z-index: 1;
+		}
+
+		/* ── TOPBAR ── */
+		.topbar {
+			background: linear-gradient(90deg, #080c12 0%, #0a1020 50%, #080c12 100%);
+			border-bottom: 1px solid var(--border);
+			padding: 0 2rem;
+			height: 64px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			position: sticky;
+			top: 0;
+			z-index: 100;
+			backdrop-filter: blur(10px);
+		}
+
+		.topbar-brand {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.brand-icon {
+			width: 36px;
+			height: 36px;
+			background: linear-gradient(135deg, var(--accent), var(--accent2));
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 18px;
+			box-shadow: 0 0 16px rgba(0, 255, 224, 0.4);
+		}
+
+		.brand-name {
+			font-family: var(--font-display);
+			font-size: 1.4rem;
+			font-weight: 700;
+			letter-spacing: 2px;
+			color: var(--accent);
+			text-transform: uppercase;
+		}
+
+		.brand-sub {
+			font-family: var(--font-mono);
+			font-size: 0.65rem;
+			color: var(--text-muted);
+			letter-spacing: 3px;
+			text-transform: uppercase;
+			margin-top: -4px;
+		}
+
+		.topbar-status {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-family: var(--font-mono);
+			font-size: 0.72rem;
+			color: var(--text-muted);
+		}
+
+		.status-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--low);
+			box-shadow: 0 0 6px var(--low);
+			animation: pulse 2s infinite;
+		}
+
+		@keyframes pulse {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0.4; }
+		}
+
+		/* ── MAIN LAYOUT ── */
+		.main-content {
+			max-width: 1400px;
+			margin: 0 auto;
+			padding: 2rem 1.5rem;
+		}
+
+		/* ── SECTION TITLES ── */
+		.section-label {
+			font-family: var(--font-mono);
+			font-size: 0.7rem;
+			color: var(--accent);
+			letter-spacing: 4px;
+			text-transform: uppercase;
+			margin-bottom: 0.5rem;
+		}
+
+		.section-title {
+			font-family: var(--font-display);
+			font-size: 1.6rem;
+			font-weight: 700;
+			color: var(--text-primary);
+			letter-spacing: 1px;
+		}
+
+		/* ── PANEL CARD ── */
+		.panel {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 1.5rem;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.panel::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 2px;
+			background: linear-gradient(90deg, transparent, var(--accent), transparent);
+			opacity: 0.4;
+		}
+
+		.panel-glow {
+			box-shadow: 0 0 30px rgba(0, 255, 224, 0.05);
+		}
+
+		/* ── INPUT SECTION ── */
+		.analyze-form {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 16px;
+			padding: 2rem;
+			margin-bottom: 2rem;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.analyze-form::after {
+			content: '';
+			position: absolute;
+			top: -40px;
+			right: -40px;
+			width: 200px;
+			height: 200px;
+			background: radial-gradient(circle, rgba(0, 255, 224, 0.06) 0%, transparent 70%);
+			pointer-events: none;
+		}
+
+		/* ── FILE UPLOAD DROP ZONE ── */
+		.drop-zone {
+			background: var(--bg-input);
+			border: 2px dashed var(--border);
+			border-radius: 10px;
+			padding: 2.5rem 1.5rem;
+			text-align: center;
+			cursor: pointer;
+			transition: all 0.25s ease;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.drop-zone:hover,
+		.drop-zone.dragover {
+			border-color: var(--accent);
+			background: rgba(0, 255, 224, 0.04);
+			box-shadow: 0 0 20px rgba(0, 255, 224, 0.08);
+		}
+
+		.drop-zone.has-file {
+			border-color: var(--low);
+			border-style: solid;
+			background: rgba(48, 209, 88, 0.04);
+		}
+
+		.drop-zone.has-file:hover {
+			border-color: var(--accent);
+			background: rgba(0, 255, 224, 0.04);
+			box-shadow: 0 0 20px rgba(0, 255, 224, 0.08);
+		}
+
+		#fileInput {
+			position: absolute;
+			inset: 0;
+			opacity: 0;
+			cursor: pointer;
+			width: 100%;
+			height: 100%;
+		}
+
+		.drop-icon {
+			font-size: 2.2rem;
+			color: var(--text-muted);
+			margin-bottom: 0.75rem;
+			display: block;
+			transition: color 0.2s;
+		}
+
+		.drop-zone:hover .drop-icon,
+		.drop-zone.dragover .drop-icon {
+			color: var(--accent);
+		}
+
+		.drop-zone.has-file .drop-icon {
+			color: var(--low);
+		}
+
+		.drop-title {
+			font-family: var(--font-display);
+			font-size: 1rem;
+			font-weight: 600;
+			color: var(--text-primary);
+			letter-spacing: 1px;
+			margin-bottom: 0.25rem;
+		}
+
+		.drop-sub {
+			font-family: var(--font-mono);
+			font-size: 0.72rem;
+			color: var(--text-muted);
+			letter-spacing: 2px;
+		}
+
+		.file-info {
+			display: none;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+			margin-top: 0.75rem;
+			padding: 0.5rem 1rem;
+			background: rgba(48, 209, 88, 0.08);
+			border: 1px solid rgba(48, 209, 88, 0.2);
+			border-radius: 6px;
+			font-family: var(--font-mono);
+			font-size: 0.78rem;
+			color: var(--low);
+		}
+
+		.file-info.visible {
+			display: flex;
+		}
+
+		.file-name-display {
+			max-width: 320px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.btn-clear-file {
+			background: none;
+			border: none;
+			color: var(--text-muted);
+			cursor: pointer;
+			font-size: 1rem;
+			padding: 0 2px;
+			line-height: 1;
+			transition: color 0.2s;
+		}
+
+		.btn-clear-file:hover {
+			color: var(--critical);
+		}
+
+		/* ── SCAN BUTTON (standalone) ── */
+		.btn-analyze {
+			background: linear-gradient(135deg, var(--accent2), var(--accent3)) !important;
+			border: none !important;
+			color: #fff !important;
+			font-family: var(--font-display) !important;
+			font-size: 1rem !important;
+			font-weight: 600 !important;
+			letter-spacing: 2px !important;
+			padding: 0.85rem 2.5rem !important;
+			border-radius: 8px !important;
+			transition: all 0.2s;
+			text-transform: uppercase;
+			width: 100%;
+			margin-top: 1rem;
+		}
+
+		.btn-analyze:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4) !important;
+		}
+
+		.btn-analyze:active {
+			transform: translateY(0);
+		}
+
+		.btn-analyze:disabled {
+			opacity: 0.5;
+			transform: none !important;
+		}
+
+		/* ── STAT CARDS ── */
+		.stat-card {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 1.25rem 1.5rem;
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			transition: border-color 0.2s, transform 0.2s;
+		}
+
+		.stat-card:hover {
+			transform: translateY(-2px);
+			border-color: rgba(0, 255, 224, 0.3);
+		}
+
+		.stat-icon {
+			width: 48px;
+			height: 48px;
+			border-radius: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.4rem;
+			flex-shrink: 0;
+		}
+
+		.stat-value {
+			font-family: var(--font-display);
+			font-size: 2rem;
+			font-weight: 700;
+			line-height: 1;
+		}
+
+		.stat-label {
+			font-size: 0.75rem;
+			color: var(--text-dim);
+			letter-spacing: 1px;
+			text-transform: uppercase;
+			margin-top: 2px;
+		}
+
+		.stat-total .stat-icon { background: rgba(0, 255, 224, 0.1); color: var(--accent); }
+		.stat-total .stat-value { color: var(--accent); }
+		.stat-critical .stat-icon { background: rgba(255, 45, 85, 0.1); color: var(--critical); }
+		.stat-critical .stat-value { color: var(--critical); }
+		.stat-high .stat-icon { background: rgba(255, 140, 0, 0.1); color: var(--high); }
+		.stat-high .stat-value { color: var(--high); }
+		.stat-medium .stat-icon { background: rgba(255, 214, 10, 0.1); color: var(--medium); }
+		.stat-medium .stat-value { color: var(--medium); }
+
+		/* ── ALERTS TABLE ── */
+		.alerts-table-wrapper {
+			overflow-x: auto;
+			border-radius: 8px;
+		}
+
+		.alerts-table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 0.88rem;
+		}
+
+		.alerts-table thead tr {
+			background: rgba(0, 255, 224, 0.05);
+			border-bottom: 1px solid var(--border);
+		}
+
+		.alerts-table thead th {
+			padding: 0.85rem 1rem;
+			font-family: var(--font-mono);
+			font-size: 0.7rem;
+			color: var(--accent);
+			letter-spacing: 3px;
+			text-transform: uppercase;
+			font-weight: 400;
+			white-space: nowrap;
+		}
+
+		.alerts-table tbody tr {
+			border-bottom: 1px solid rgba(30, 45, 64, 0.6);
+			transition: background 0.15s;
+			animation: rowIn 0.3s ease forwards;
+			opacity: 0;
+		}
+
+		@keyframes rowIn {
+			from { opacity: 0; transform: translateX(-10px); }
+			to { opacity: 1; transform: translateX(0); }
+		}
+
+		.alerts-table tbody tr:hover {
+			background: rgba(0, 255, 224, 0.03);
+		}
+
+		.alerts-table tbody td {
+			padding: 0.85rem 1rem;
+			color: var(--text-primary);
+			vertical-align: middle;
+		}
+
+		.row-num {
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			color: var(--text-muted);
+		}
+
+		.alert-message {
+			font-family: var(--font-mono);
+			font-size: 0.85rem;
+			color: var(--text-primary);
+		}
+
+		/* ── SEVERITY BADGES ── */
+		.badge-severity {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 4px 12px;
+			border-radius: 20px;
+			font-family: var(--font-mono);
+			font-size: 0.7rem;
+			font-weight: 600;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+		}
+
+		.badge-CRITICAL { background: rgba(255,45,85,0.15); color: var(--critical); border: 1px solid rgba(255,45,85,0.3); box-shadow: 0 0 8px rgba(255,45,85,0.2); }
+		.badge-HIGH { background: rgba(255,140,0,0.15); color: var(--high); border: 1px solid rgba(255,140,0,0.3); }
+		.badge-MEDIUM { background: rgba(255,214,10,0.12); color: var(--medium); border: 1px solid rgba(255,214,10,0.3); }
+		.badge-LOW { background: rgba(48,209,88,0.12); color: var(--low); border: 1px solid rgba(48,209,88,0.3); }
+
+		.badge-dot {
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: currentColor;
+		}
+
+		/* ── CHARTS ── */
+		.chart-container {
+			position: relative;
+			height: 260px;
+		}
+
+		/* ── EMPTY / ERROR STATES ── */
+		.empty-state {
+			text-align: center;
+			padding: 4rem 2rem;
+			color: var(--text-muted);
+		}
+
+		.empty-state i {
+			font-size: 3rem;
+			margin-bottom: 1rem;
+			opacity: 0.3;
+			display: block;
+		}
+
+		.empty-state p {
+			font-family: var(--font-mono);
+			font-size: 0.8rem;
+			letter-spacing: 2px;
+		}
+
+		/* ── LOADER ── */
+		.scan-loader {
+			display: none;
+			text-align: center;
+			padding: 3rem;
+		}
+
+		.scan-loader.active {
+			display: block;
+		}
+
+		.scan-ring {
+			width: 60px;
+			height: 60px;
+			border: 2px solid var(--border);
+			border-top-color: var(--accent);
+			border-radius: 50%;
+			animation: spin 0.8s linear infinite;
+			margin: 0 auto 1rem;
+		}
+
+		@keyframes spin { to { transform: rotate(360deg); } }
+
+		.scan-text {
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			color: var(--accent);
+			letter-spacing: 3px;
+			animation: blink 1s steps(1) infinite;
+		}
+
+		@keyframes blink { 50% { opacity: 0; } }
+
+		/* ── ERROR ALERT ── */
+		.error-box {
+			background: rgba(255, 45, 85, 0.08);
+			border: 1px solid rgba(255, 45, 85, 0.3);
+			border-radius: 8px;
+			padding: 1rem 1.25rem;
+			color: var(--critical);
+			font-family: var(--font-mono);
+			font-size: 0.82rem;
+			display: none;
+			margin-top: 1rem;
+		}
+
+		.error-box.active {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		/* ── ENDPOINT TOGGLE ── */
+		.endpoint-toggle {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 1rem;
+		}
+
+		.ep-btn {
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			color: var(--text-dim);
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			padding: 6px 16px;
+			border-radius: 6px;
+			cursor: pointer;
+			transition: all 0.2s;
+			letter-spacing: 1px;
+		}
+
+		.ep-btn.active,
+		.ep-btn:hover {
+			border-color: var(--accent);
+			color: var(--accent);
+			background: rgba(0, 255, 224, 0.05);
+		}
+
+		/* ── TERMINAL LOG ── */
+		.terminal {
+			background: #060a0f;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1rem;
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			color: #4a5568;
+			max-height: 120px;
+			overflow-y: auto;
+			line-height: 1.8;
+		}
+
+		.terminal .log-line { display: block; }
+		.terminal .log-time { color: var(--text-muted); }
+		.terminal .log-ok { color: var(--low); }
+		.terminal .log-warn { color: var(--medium); }
+		.terminal .log-err { color: var(--critical); }
+		.terminal .log-info { color: var(--accent2); }
+
+		/* ── SCROLLBAR ── */
+		::-webkit-scrollbar { width: 6px; height: 6px; }
+		::-webkit-scrollbar-track { background: var(--bg-base); }
+		::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+		::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
+
+		/* ── RESPONSIVE ── */
+		@media (max-width: 768px) {
+			.topbar { padding: 0 1rem; }
+			.main-content { padding: 1rem; }
+			.brand-sub { display: none; }
+		}
+	</style>
+</head>
+
+<body>
+	<div class="app-wrapper">
+
+		<nav class="topbar">
+			<div class="topbar-brand">
+				<div class="brand-icon">🛡️</div>
+				<div>
+					<div class="brand-name">LogPulse</div>
+					<div class="brand-sub">LogPulse v1.0</div>
+				</div>
+			</div>
+			<div class="topbar-status">
+				<div class="status-dot"></div>
+				<span id="serverStatus">CONNECTING...</span>
+			</div>
+		</nav>
+
+		<div class="main-content">
+
+			<div class="analyze-form mb-4">
+				<div class="section-label">// Scan Target</div>
+				<div class="section-title mb-3">Log File Analysis</div>
+
+				<div class="endpoint-toggle">
+					<button class="ep-btn active" onclick="setEndpoint('analyze', this)">/analyze</button>
+					<button class="ep-btn" onclick="setEndpoint('summary', this)">/summary</button>
+				</div>
+
+				<div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+					<input type="file" id="fileInput" accept=".xml,.log,.txt,.json,.csv" />
+					<i class="bi bi-cloud-upload drop-icon" id="dropIcon"></i>
+					<div class="drop-title" id="dropTitle">DROP LOG FILE HERE</div>
+					<div class="drop-sub" id="dropSub">OR CLICK TO BROWSE &nbsp;·&nbsp; XML, LOG, TXT, JSON, CSV</div>
+				</div>
+
+				<div class="file-info" id="fileInfo">
+					<i class="bi bi-file-earmark-text"></i>
+					<span class="file-name-display" id="fileNameDisplay">—</span>
+					<span style="color:var(--text-muted);font-size:0.7rem;" id="fileSizeDisplay"></span>
+					<button class="btn-clear-file" onclick="clearFile(event)" title="Remove file">
+						<i class="bi bi-x-circle"></i>
+					</button>
+				</div>
+
+				<div class="error-box" id="errorBox">
+					<i class="bi bi-exclamation-triangle-fill"></i>
+					<span id="errorMsg">Error message here</span>
+				</div>
+
+				<button class="btn btn-analyze" id="analyzeBtn" onclick="runAnalysis()">
+					<i class="bi bi-search me-2"></i>SCAN FILE
+				</button>
+
+				<div class="terminal mt-3" id="terminalLog">
+					<span class="log-line"><span class="log-time">[SYSTEM] </span><span class="log-info">LogPulse initialized.</span></span>
+					<span class="log-line"><span class="log-time">[SYSTEM] </span><span class="log-ok">Backend connection ready on port 8080.</span></span>
+					<span class="log-line"><span class="log-time">[SYSTEM] </span><span class="log-info">Upload a log file and press SCAN to begin.</span></span>
+				</div>
+			</div>
+
+			<div class="scan-loader" id="scanLoader">
+				<div class="scan-ring"></div>
+				<div class="scan-text">SCANNING FILE...</div>
+			</div>
+
+			<div id="resultsSection" style="display:none;">
+
+				<div class="row g-3 mb-4">
+					<div class="col-6 col-md-3">
+						<div class="stat-card stat-total">
+							<div class="stat-icon"><i class="bi bi-shield-exclamation"></i></div>
+							<div>
+								<div class="stat-value" id="statTotal">0</div>
+								<div class="stat-label">Total Alerts</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-6 col-md-3">
+						<div class="stat-card stat-critical">
+							<div class="stat-icon"><i class="bi bi-exclamation-octagon-fill"></i></div>
+							<div>
+								<div class="stat-value" id="statCritical">0</div>
+								<div class="stat-label">Critical</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-6 col-md-3">
+						<div class="stat-card stat-high">
+							<div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+							<div>
+								<div class="stat-value" id="statHigh">0</div>
+								<div class="stat-label">High</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-6 col-md-3">
+						<div class="stat-card stat-medium">
+							<div class="stat-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
+							<div>
+								<div class="stat-value" id="statMedium">0</div>
+								<div class="stat-label">Medium</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="row g-3 mb-4">
+
+					<div class="col-md-4">
+						<div class="panel panel-glow h-100">
+							<div class="section-label mb-1">// Severity Breakdown</div>
+							<div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:1rem;">Alert Distribution</div>
+							<div class="chart-container">
+								<canvas id="doughnutChart"></canvas>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-md-8">
+						<div class="panel panel-glow h-100">
+							<div class="section-label mb-1">// Alert Types</div>
+							<div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:1rem;">Alerts by Category</div>
+							<div class="chart-container">
+								<canvas id="barChart"></canvas>
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+				<div class="panel panel-glow">
+					<div class="d-flex justify-content-between align-items-center mb-3">
+						<div>
+							<div class="section-label">// Threat Intelligence</div>
+							<div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;">Detected Alerts</div>
+						</div>
+						<button class="ep-btn" onclick="exportCSV()">
+							<i class="bi bi-download me-1"></i>Export CSV
+						</button>
+					</div>
+
+					<div class="alerts-table-wrapper">
+						<table class="alerts-table">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Message</th>
+									<th>Severity</th>
+									<th>Category</th>
+								</tr>
+							</thead>
+							<tbody id="alertsTableBody"></tbody>
+						</table>
+					</div>
+
+					<div class="empty-state" id="noAlertsMsg" style="display:none;">
+						<i class="bi bi-shield-check"></i>
+						<p>NO THREATS DETECTED</p>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		const API_BASE = '';
+		let currentEndpoint = 'analyze';
+		let doughnutChart = null;
+		let barChart = null;
+		let selectedFile = null;
+
+		// ── Check server status ──
+		async function checkServer() {
+			try {
+				const r = await fetch(`${API_BASE}/analyze?path=ping`, {signal: AbortSignal.timeout(2000)});
+				document.getElementById('serverStatus').textContent = 'BACKEND ONLINE';
+				document.querySelector('.status-dot').style.background = 'var(--low)';
+			} catch {
+				document.getElementById('serverStatus').textContent = 'BACKEND OFFLINE';
+				document.querySelector('.status-dot').style.background = 'var(--critical)';
+				document.querySelector('.status-dot').style.boxShadow = '0 0 6px var(--critical)';
+			}
+		}
+		checkServer();
+
+		// ── Endpoint toggle ──
+		function setEndpoint(ep, btn) {
+			currentEndpoint = ep;
+			document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+			btn.classList.add('active');
+			addLog('info', `Endpoint switched to /${ep}`);
+		}
+
+		// ── Terminal log ──
+		function addLog(type, msg) {
+			const terminal = document.getElementById('terminalLog');
+			const now = new Date().toLocaleTimeString('en', {hour12: false});
+			const line = document.createElement('span');
+			line.className = 'log-line';
+			line.innerHTML = `<span class="log-time">[${now}] </span><span class="log-${type}">${msg}</span>`;
+			terminal.appendChild(line);
+			terminal.scrollTop = terminal.scrollHeight;
+		}
+
+		// ── File size formatter ──
+		function formatBytes(bytes) {
+			if (bytes < 1024) return `${bytes} B`;
+			if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+			return `${(bytes / 1048576).toFixed(1)} MB`;
+		}
+
+		// ── File input change ──
+		document.getElementById('fileInput').addEventListener('change', function(e) {
+			handleFile(e.target.files[0]);
+		});
+
+		function handleFile(file) {
+			if (!file) return;
+			selectedFile = file;
+
+			const dropZone = document.getElementById('dropZone');
+			const fileInfo = document.getElementById('fileInfo');
+			const dropIcon = document.getElementById('dropIcon');
+			const dropTitle = document.getElementById('dropTitle');
+			const dropSub = document.getElementById('dropSub');
+
+			// Update drop zone appearance
+			dropZone.classList.add('has-file');
+			dropIcon.className = 'bi bi-file-earmark-check drop-icon';
+			dropTitle.textContent = 'FILE SELECTED';
+			dropSub.textContent = 'CLICK TO CHANGE FILE';
+
+			// Show file info bar
+			document.getElementById('fileNameDisplay').textContent = file.name;
+			document.getElementById('fileSizeDisplay').textContent = formatBytes(file.size);
+			fileInfo.classList.add('visible');
+
+			hideError();
+			addLog('ok', `File selected: ${file.name} (${formatBytes(file.size)})`);
+		}
+
+		function clearFile(e) {
+			e.stopPropagation();
+			selectedFile = null;
+			document.getElementById('fileInput').value = '';
+
+			const dropZone = document.getElementById('dropZone');
+			const dropIcon = document.getElementById('dropIcon');
+			const dropTitle = document.getElementById('dropTitle');
+			const dropSub = document.getElementById('dropSub');
+
+			dropZone.classList.remove('has-file');
+			dropIcon.className = 'bi bi-cloud-upload drop-icon';
+			dropTitle.textContent = 'DROP LOG FILE HERE';
+			dropSub.textContent = 'OR CLICK TO BROWSE · XML, LOG, TXT, JSON, CSV';
+			document.getElementById('fileInfo').classList.remove('visible');
+
+			addLog('warn', 'File cleared.');
+		}
+
+		// ── Drag and drop ──
+		const dropZone = document.getElementById('dropZone');
+
+		dropZone.addEventListener('dragover', function(e) {
+			e.preventDefault();
+			this.classList.add('dragover');
+		});
+
+		dropZone.addEventListener('dragleave', function() {
+			this.classList.remove('dragover');
+		});
+
+		dropZone.addEventListener('drop', function(e) {
+			e.preventDefault();
+			this.classList.remove('dragover');
+			const file = e.dataTransfer.files[0];
+			if (file) {
+				handleFile(file);
+				// Sync with the file input for form compatibility
+				const dt = new DataTransfer();
+				dt.items.add(file);
+				document.getElementById('fileInput').files = dt.files;
+			}
+		});
+
+		// ── Main analysis ──
+		async function runAnalysis() {
+			if (!selectedFile) {
+				showError('Please upload a log file before scanning.');
+				return;
+			}
+
+			hideError();
+			showLoader(true);
+			document.getElementById('resultsSection').style.display = 'none';
+			document.getElementById('analyzeBtn').disabled = true;
+
+			addLog('info', `Scanning: ${selectedFile.name}`);
+			addLog('info', `Endpoint: /${currentEndpoint}`);
+
+			try {
+				const formData = new FormData();
+				formData.append('file', selectedFile);
+
+				const url = `${API_BASE}/${currentEndpoint}`;
+				const res = await fetch(url, {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await res.json();
+
+				if (!res.ok) {
+					const errMsg = data.error || 'Unknown error from server.';
+					showError(errMsg);
+					addLog('err', `Error: ${errMsg}`);
+					return;
+				}
+
+				// Normalize: /analyze returns array, /summary returns {alerts:[...], totalAlerts:N}
+				const alerts = Array.isArray(data) ? data : (data.alerts || []);
+				addLog('ok', `Scan complete. ${alerts.length} alert(s) found.`);
+				renderResults(alerts);
+
+			} catch (err) {
+				showError('Could not connect to backend. Make sure the Spring Boot app is running on port 8080.');
+				addLog('err', 'Connection failed. Is the backend running?');
+			} finally {
+				showLoader(false);
+				document.getElementById('analyzeBtn').disabled = false;
+			}
+		}
+
+		// ── Render ──
+		function renderResults(alerts) {
+			const counts = {CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0};
+			alerts.forEach(a => {const s = (a.severity || 'LOW').toUpperCase(); counts[s] = (counts[s] || 0) + 1;});
+
+			document.getElementById('statTotal').textContent = alerts.length;
+			document.getElementById('statCritical').textContent = counts.CRITICAL;
+			document.getElementById('statHigh').textContent = counts.HIGH;
+			document.getElementById('statMedium').textContent = counts.MEDIUM;
+
+			const tbody = document.getElementById('alertsTableBody');
+			tbody.innerHTML = '';
+			document.getElementById('noAlertsMsg').style.display = alerts.length === 0 ? 'block' : 'none';
+
+			alerts.forEach((alert, i) => {
+				const sev = (alert.severity || 'LOW').toUpperCase();
+				const cat = detectCategory(alert.message || '');
+				const tr = document.createElement('tr');
+				tr.style.animationDelay = `${i * 60}ms`;
+				tr.innerHTML = `
+					<td class="row-num">${String(i + 1).padStart(2, '0')}</td>
+					<td class="alert-message">${escHtml(alert.message || '-')}</td>
+					<td><span class="badge-severity badge-${sev}"><span class="badge-dot"></span>${sev}</span></td>
+					<td style="font-size:0.78rem;color:var(--text-dim);font-family:var(--font-mono);">${cat}</td>
+				`;
+				tbody.appendChild(tr);
+			});
+
+			renderDoughnut(counts);
+			renderBar(alerts);
+
+			document.getElementById('resultsSection').style.display = 'block';
+			document.getElementById('resultsSection').scrollIntoView({behavior: 'smooth', block: 'start'});
+		}
+
+		function detectCategory(msg) {
+			msg = msg.toLowerCase();
+			if (msg.includes('brute')) return 'BRUTE_FORCE';
+			if (msg.includes('odd hour') || msg.includes('login')) return 'SUSPICIOUS_LOGIN';
+			if (msg.includes('new user') || msg.includes('user:')) return 'ACCOUNT_CREATION';
+			if (msg.includes('multiple ip') || msg.includes('ip:')) return 'MULTI_IP_LOGIN';
+			return 'UNKNOWN';
+		}
+
+		// ── Charts ──
+		const chartDefaults = {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {legend: {labels: {color: '#718096', font: {family: 'Share Tech Mono', size: 11}}}}
+		};
+
+		function renderDoughnut(counts) {
+			if (doughnutChart) doughnutChart.destroy();
+			const ctx = document.getElementById('doughnutChart').getContext('2d');
+			doughnutChart = new Chart(ctx, {
+				type: 'doughnut',
+				data: {
+					labels: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+					datasets: [{
+						data: [counts.CRITICAL, counts.HIGH, counts.MEDIUM, counts.LOW || 0],
+						backgroundColor: ['rgba(255,45,85,0.8)', 'rgba(255,140,0,0.8)', 'rgba(255,214,10,0.8)', 'rgba(48,209,88,0.8)'],
+						borderColor: ['#ff2d55', '#ff8c00', '#ffd60a', '#30d158'],
+						borderWidth: 1,
+						hoverOffset: 6,
+					}]
+				},
+				options: {
+					...chartDefaults,
+					cutout: '68%',
+					plugins: {
+						...chartDefaults.plugins,
+						legend: {position: 'bottom', labels: {color: '#718096', font: {family: 'Share Tech Mono', size: 10}, padding: 16}}
+					}
+				}
+			});
+		}
+
+		function renderBar(alerts) {
+			if (barChart) barChart.destroy();
+			const cats = {};
+			alerts.forEach(a => {const c = detectCategory(a.message || ''); cats[c] = (cats[c] || 0) + 1;});
+			const ctx = document.getElementById('barChart').getContext('2d');
+			barChart = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: Object.keys(cats),
+					datasets: [{
+						label: 'Alerts',
+						data: Object.values(cats),
+						backgroundColor: ['rgba(0,255,224,0.2)', 'rgba(0,102,255,0.2)', 'rgba(124,58,237,0.2)', 'rgba(255,45,85,0.2)'],
+						borderColor: ['#00ffe0', '#0066ff', '#7c3aed', '#ff2d55'],
+						borderWidth: 1,
+						borderRadius: 4,
+					}]
+				},
+				options: {
+					...chartDefaults,
+					scales: {
+						x: {ticks: {color: '#4a5568', font: {family: 'Share Tech Mono', size: 10}}, grid: {color: 'rgba(30,45,64,0.5)'}},
+						y: {ticks: {color: '#4a5568', font: {family: 'Share Tech Mono', size: 10}, stepSize: 1}, grid: {color: 'rgba(30,45,64,0.5)'}}
+					},
+					plugins: {...chartDefaults.plugins, legend: {display: false}}
+				}
+			});
+		}
+
+		// ── Helpers ──
+		function showLoader(v) {
+			document.getElementById('scanLoader').classList.toggle('active', v);
+		}
+
+		function showError(msg) {
+			const box = document.getElementById('errorBox');
+			document.getElementById('errorMsg').textContent = msg;
+			box.classList.add('active');
+		}
+
+		function hideError() {
+			document.getElementById('errorBox').classList.remove('active');
+		}
+
+		function escHtml(str) {
+			return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		}
+
+		// ── Export CSV ──
+		function exportCSV() {
+			const rows = [['#', 'Message', 'Severity', 'Category']];
+			document.querySelectorAll('#alertsTableBody tr').forEach((tr) => {
+				const tds = tr.querySelectorAll('td');
+				rows.push([
+					tds[0]?.textContent.trim(),
+					tds[1]?.textContent.trim(),
+					tds[2]?.textContent.trim(),
+					tds[3]?.textContent.trim(),
+				]);
+			});
+			const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+			const a = document.createElement('a');
+			a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+			a.download = 'security-alerts.csv';
+			a.click();
+			addLog('ok', 'Alerts exported to security-alerts.csv');
+		}
+	</script>
+</body>
+
+</html>
