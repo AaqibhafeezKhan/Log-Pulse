@@ -505,7 +505,12 @@
 				<button class="endpoint-btn" data-endpoint="summary">/summary</button>
 			</div>
 
-			<button class="scan-btn" id="scanBtn">INITIATE SCAN</button>
+			<div style="display:flex; justify-content:space-between; margin-top:2rem; gap:10px;">
+				<button class="scan-btn" id="dbFetchBtn" style="background: #1e293b; border: 1px solid var(--primary); padding: 0.8rem 1.5rem; font-size: 0.9rem; flex: 1;">FETCH FROM DB</button>
+				<button class="scan-btn" id="dbClearBtn" style="background: #1e293b; border: 1px solid var(--critical); color: var(--critical); padding: 0.8rem 1.5rem; font-size: 0.9rem; flex: 1;">CLEAR DB</button>
+			</div>
+
+			<button class="scan-btn" id="scanBtn" style="margin-top: 1rem;">INITIATE SCAN</button>
 
 			<div class="log-console" id="logConsole">
 				<span><span class="log-time">[SYSTEM]</span> <span class="log-ok">LogPulse Engine initialized. Ready for input.</span></span>
@@ -841,6 +846,36 @@
 			a.click();
 			URL.revokeObjectURL(url);
 			logMessage('OK', 'Exported analysis report to CSV');
+		});
+
+		document.getElementById('dbFetchBtn').addEventListener('click', async () => {
+			document.getElementById('resultsArea').style.display = 'none';
+			document.getElementById('loaderArea').style.display = 'block';
+			logMessage('INFO', 'Retrieving historical alerts from Database...');
+
+			try {
+				const res = await fetch('/alerts', { method: 'GET' });
+				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+				const alerts = await res.json();
+				logMessage('OK', `Successfully retrieved ${alerts.length} historical vulnerabilities from DB.`);
+				renderDashboard(alerts);
+			} catch (e) {
+				showError(`Database error: ${e.message}`);
+			} finally {
+				document.getElementById('loaderArea').style.display = 'none';
+			}
+		});
+
+		document.getElementById('dbClearBtn').addEventListener('click', async () => {
+			logMessage('INFO', 'Attempting to clear database...');
+			try {
+				const res = await fetch('/alerts', { method: 'DELETE' });
+				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+				logMessage('OK', 'Database cleared successfully.');
+			} catch (e) {
+				showError(`Error clearing DB: ${e.message}`);
+			}
 		});
 
 		window.addEventListener('load', checkServer);

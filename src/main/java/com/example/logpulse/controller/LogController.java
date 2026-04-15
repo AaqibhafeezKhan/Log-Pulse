@@ -63,4 +63,16 @@ public class LogController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Failed to read uploaded file."));
         }
     }
+
+    @GetMapping("/alerts")
+    public ResponseEntity<?> getAllAlerts() {
+        List<Alert> alerts = s.getAllAlerts();
+        return ResponseEntity.ok(alerts);
+    }
+
+    @DeleteMapping("/alerts")
+    public ResponseEntity<?> clearAlerts() {
+        s.clearAlerts();
+        return ResponseEntity.ok(Map.of("message", "All alerts have been cleared from the database."));
+    }
 }
