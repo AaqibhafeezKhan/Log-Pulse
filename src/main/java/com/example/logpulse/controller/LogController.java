@@ -14,7 +14,7 @@ public class LogController {
 
     private final LogPulseService s;
 
-    private static final List<String> ALLOWED_EXTENSIONS = List.of(".xml", ".log", ".txt", ".json", ".csv");
+    private static final List<String> ALLOWED_EXTENSIONS = List.of(".xml", ".log", ".txt", ".json", ".csv", ".sample");
 
     public LogController(LogPulseService s) {
         this.s = s;
